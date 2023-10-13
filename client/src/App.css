@@ -188,7 +188,17 @@ h3 {
   border: 8px solid;
   border-color: #000 transparent #555 transparent;
   border-radius: 50%;
+  background-size: contain;
   animation: spin 1.2s linear infinite;
+}
+
+.profile-img {
+  border: solid black 1px;
+  height: 50px;
+  width: 50px;
+  background-size: cover;
+
+  border-radius: 50%;
 }
 
 @keyframes spin {
