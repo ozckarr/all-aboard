@@ -1,29 +1,38 @@
 import { useSelector } from "react-redux";
 import { useRef, useState, useEffect } from "react";
 import {
-  getStorage,
-  uploadBytes,
-  uploadBytesResumable,
-  ref,
   getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytesResumable,
 } from "firebase/storage";
 import { app } from "../firebase";
+import { useDispatch } from "react-redux";
+import {
+  updateUserStart,
+  updateUserSuccess,
+  updateUserFailure,
+  deleteUserStart,
+  deleteUserSuccess,
+  deleteUserFailure,
+  signOut,
+} from "../redux/user/userSlice";
 
-const Profile = () => {
+export default function Profile() {
+  const dispatch = useDispatch();
   const fileRef = useRef(null);
   const [image, setImage] = useState(undefined);
   const [imagePercent, setImagePercent] = useState(0);
   const [imageError, setImageError] = useState(false);
   const [formData, setFormData] = useState({});
-  const { currentUser } = useSelector((state) => state.user);
-  const loading = false;
+  const [updateSuccess, setUpdateSuccess] = useState(false);
 
+  const { currentUser, loading, error } = useSelector((state) => state.user);
   useEffect(() => {
     if (image) {
       handleFileUpload(image);
     }
   }, [image]);
-
   const handleFileUpload = async (image) => {
     const storage = getStorage(app);
     const fileName = new Date().getTime() + image.name;
@@ -46,15 +55,62 @@ const Profile = () => {
       }
     );
   };
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(updateUserFailure(data));
+        return;
+      }
+      dispatch(updateUserSuccess(data));
+      setUpdateSuccess(true);
+    } catch (error) {
+      dispatch(updateUserFailure(error));
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      dispatch(deleteUserStart());
+      const res = await fetch(`/api/user/delete/${currentUser._id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success === false) {
+        dispatch(deleteUserFailure(data));
+        return;
+      }
+      dispatch(deleteUserSuccess(data));
+    } catch (error) {
+      dispatch(deleteUserFailure(error));
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await fetch("/api/auth/signout");
+      dispatch(signOut());
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className="container">
       <section className="form">
-        <form>
+        <form onSubmit={handleSubmit}>
           <input
             type="file"
             ref={fileRef}
@@ -74,13 +130,13 @@ const Profile = () => {
             onClick={() => fileRef.current.click()}
           ></div>
           {imageError ? (
-            <span className="text-red-700">
+            <span className="">
               Error uploading image (file size must be less than 2 MB)
             </span>
           ) : imagePercent > 0 && imagePercent < 100 ? (
-            <span className="text-slate-700">{`Uploading: ${imagePercent} %`}</span>
+            <span className="">{`Uploading: ${imagePercent} %`}</span>
           ) : imagePercent === 100 ? (
-            <span className="text-green-700">Image uploaded successfully</span>
+            <span className="">Image uploaded successfully</span>
           ) : (
             ""
           )}
@@ -121,13 +177,16 @@ const Profile = () => {
               {loading ? "Loading..." : "Update"}
             </button>
           </div>
+          <p>{error && "Something went wrong!"}</p>
+          <p>{updateSuccess && "User is updated successfully!"}</p>
           <div className="form-group">
             <button
               type="submit"
               className="btn btn-block"
+              onClick={handleSignOut}
               style={{ backgroundColor: "#8B0000" }}
             >
-              Log out
+              Sign out
             </button>
           </div>
           <div className="form-group">
@@ -135,6 +194,7 @@ const Profile = () => {
               type="submit"
               className="btn btn-block"
               style={{ backgroundColor: "red" }}
+              onClick={handleDeleteAccount}
             >
               Delete
             </button>
@@ -143,6 +203,4 @@ const Profile = () => {
       </section>
     </div>
   );
-};
-
-export default Profile;
+}

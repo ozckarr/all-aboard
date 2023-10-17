@@ -16,17 +16,14 @@ const SignUp = () => {
   const { username, email, password /*password2*/ } = formData;
 
   const handleChange = (e) => {
-    setFormData((prevState) => ({
-      ...prevState,
-      [e.target.name]: e.target.value,
-    }));
+    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
-    setError(false);
     e.preventDefault();
     try {
       setLoading(true);
+      setError(false);
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
@@ -36,15 +33,14 @@ const SignUp = () => {
       });
       const data = await res.json();
       setLoading(false);
-      console.log(data);
       if (data.success === false) {
         setError(true);
         return;
       }
       navigate("/sign-in");
     } catch (error) {
-      setLoading(true);
-      setError(false);
+      setLoading(false);
+      setError(true);
     }
   };
 

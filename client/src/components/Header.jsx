@@ -10,16 +10,6 @@ const Header = () => {
         <Link to="/">AuthTest</Link>
       </div>
       <ul>
-        <Link to="/">
-          <li>
-            <button className="btn">Home</button>
-          </li>
-        </Link>
-        <Link to="/about">
-          <li>
-            <button className="btn">About</button>
-          </li>
-        </Link>
         <li>
           {currentUser ? (
             <Link to="/profile">
