@@ -197,7 +197,16 @@ h3 {
   height: 50px;
   width: 50px;
   background-size: cover;
+  cursor: "pointer";
+  border-radius: 50%;
+}
 
+.profile-img-big {
+  cursor: "pointer";
+  border: solid black 5px;
+  height: 150px;
+  width: 150px;
+  background-size: cover;
   border-radius: 50%;
 }
 
